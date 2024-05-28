@@ -3,8 +3,10 @@
 #include "Game.h"
 
 
+
 void StartHeapControl();
 void DumpMemoryLeaks();
+
 
 int SDL_main(int argv, char** args)
 {
@@ -12,7 +14,7 @@ int SDL_main(int argv, char** args)
 
 	StartHeapControl();
 
-	Game* pGame{ new Game{ Window{ "Project name - Name, first name - 1DAEXX", 846.f , 500.f } } };
+	Game* pGame{ new Game{ Window{ "CorrCure - D'hont, Anael - 1DAE13", G_WINDOW_SIZE.x , G_WINDOW_SIZE.y } } };
 	pGame->Run();
 	delete pGame;
 
