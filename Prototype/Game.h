@@ -43,12 +43,12 @@ private:
 
 	// my variables
 
-	Point2f m_CameraPos							{};
+	Point2f m_CameraPos							{-3200,-3200};
 	int m_CameraSpeed							{5};
 	Point2f m_MousePosInGrid					{};
 	Point2f m_MousePos{};
 
-	float m_ZoomLevel							{0.5};
+	float m_ZoomLevel							{1.0};
 	Transform m_GridTransformer					{};
 
 	struct KeyMemo
@@ -75,6 +75,10 @@ private:
 	Transform m_WonTextTrans{ m_WonTextTrans.Position = Vector2f(-m_PausedText->GetWidth() / 2 + G_WINDOW_SIZE.x / 2, G_WINDOW_SIZE.y * 2 / 3) };
 	const Texture* m_LosedText = new Texture("<YOU LOSE>", m_TextPath, 50, Color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
 	Transform m_LosedTextTrans{ m_LosedTextTrans.Position = Vector2f(-m_PausedText->GetWidth() / 2 + G_WINDOW_SIZE.x / 2, G_WINDOW_SIZE.y * 2 / 3) };
+	const Texture* m_RecipeTreeTEX = new Texture("CorrCureRecipeTree.png");
+	Transform m_RecipeTreeTEXTrans{ m_RecipeTreeTEXTrans.Position = Vector2f( 0.5 * ( - m_RecipeTreeTEX->GetWidth() / 2) + G_WINDOW_SIZE.x / 2, 0.5  * (-m_RecipeTreeTEX->GetHeight() / 2) + G_WINDOW_SIZE.y / 2)};
+
+	bool m_ShowRecipeTree						{ false };
 
 	bool m_IsGamePaused							{ false };
 };

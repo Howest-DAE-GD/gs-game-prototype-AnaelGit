@@ -34,7 +34,6 @@ void Grid::Update()
 		CorruptionSpread();
 	}
 	m_CorruptionSpeed += m_CorruptionSpreadAcceleration;
-	std::cout << m_CorruptionSpeed << "\n";
 
 	int nbrOfCorruptedTile = 0 ;
 
@@ -275,9 +274,21 @@ void Grid::Draw() const
 	{
 		utils::SetColor(Color4f(0.2f, 0.2f, 0.2f, 0.75f));
 		utils::FillRect((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 8, (m_FactoryWithInterfacePos.y + 1) * M_TILE_SIZE + 8, 8 * M_TILE_SIZE - 16, 3 * M_TILE_SIZE - 16);
-		for (int index{ 1 }; index <= 3; index++)
+
+		int selectedRecpie = dynamic_cast<Fabricator*>(m_GridBuildings[int(m_FactoryWithInterfacePos.x)][int(m_FactoryWithInterfacePos.y)])->GetSelectedRecipe();
+
+		for (int index{ 0 }; index <= 2; index++)
 		{
-			utils::FillRect((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 14, (m_FactoryWithInterfacePos.y + index) * M_TILE_SIZE + 14, 8 * M_TILE_SIZE - 28, M_TILE_SIZE - 28);
+			if (index == selectedRecpie)
+			{
+				utils::SetColor(Color4f(0.7f, 0.7f, 0.0f, 0.75f));
+			}
+			else
+			{
+				utils::SetColor(Color4f(0.2f, 0.2f, 0.2f, 0.75f));
+			}
+
+			utils::FillRect((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 14, (m_FactoryWithInterfacePos.y + 2 - (index - 1)) * M_TILE_SIZE + 14, 8 * M_TILE_SIZE - 28, M_TILE_SIZE - 28);
 		}
 
 		m_CompactNephirRecipeTextTrans.ApplyTransformation();

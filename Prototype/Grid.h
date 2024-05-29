@@ -83,7 +83,7 @@ private:
 	Tile* m_Grid[m_GridWidth][m_GridHeight];
 	Buildings* m_GridBuildings[m_GridWidth][m_GridHeight]		{};
 
-	float m_CorruptionSpeed										{2};
+	float m_CorruptionSpeed										{1};
 	const float m_CorruptionSpreadAcceleration					{ 1/36000.f};
 	Buildings::BuildingTypes m_SelectedBuilding					{ Buildings::BuildingTypes::miner};
 	ConveyorBelt::Direction m_SelectedDirection					{ConveyorBelt::Direction::up};

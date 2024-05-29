@@ -5,29 +5,29 @@
 Fabricator::Fabricator(BuildingTypes buildingType, int posX, int posY, int width, int height)
 	: Buildings(buildingType, posX, posY, width, height)
 {
-	m_Input[0].whichItem = m_RecipeTable[SelectedRecipe].inputOne.whichItem;
-	m_Input[1].whichItem = m_RecipeTable[SelectedRecipe].inputTwo.whichItem;
+	m_Input[0].whichItem = m_RecipeTable[m_SelectedRecipe].inputOne.whichItem;
+	m_Input[1].whichItem = m_RecipeTable[m_SelectedRecipe].inputTwo.whichItem;
 }
 
 void Fabricator::Update()
 {
 	if (m_Output.quantity < 10)
 	{
-		if (m_Input[0].whichItem == m_RecipeTable[SelectedRecipe].inputOne.whichItem
-			&& m_Input[0].quantity >= m_RecipeTable[SelectedRecipe].inputOne.quantity
-			&& m_Input[1].whichItem == m_RecipeTable[SelectedRecipe].inputTwo.whichItem
-			&& m_Input[1].quantity >= m_RecipeTable[SelectedRecipe].inputTwo.quantity)
+		if (m_Input[0].whichItem == m_RecipeTable[m_SelectedRecipe].inputOne.whichItem
+			&& m_Input[0].quantity >= m_RecipeTable[m_SelectedRecipe].inputOne.quantity
+			&& m_Input[1].whichItem == m_RecipeTable[m_SelectedRecipe].inputTwo.whichItem
+			&& m_Input[1].quantity >= m_RecipeTable[m_SelectedRecipe].inputTwo.quantity)
 		{
 			++m_TickTimer;
 
-			if (m_TickTimer > m_RecipeTable[SelectedRecipe].ticksToCraft)
+			if (m_TickTimer > m_RecipeTable[m_SelectedRecipe].ticksToCraft)
 			{
-				m_TickTimer -= m_RecipeTable[SelectedRecipe].ticksToCraft;
+				m_TickTimer -= m_RecipeTable[m_SelectedRecipe].ticksToCraft;
 
-				m_Input[0].quantity -= m_RecipeTable[SelectedRecipe].inputOne.quantity;
-				m_Input[1].quantity -= m_RecipeTable[SelectedRecipe].inputTwo.quantity;
+				m_Input[0].quantity -= m_RecipeTable[m_SelectedRecipe].inputOne.quantity;
+				m_Input[1].quantity -= m_RecipeTable[m_SelectedRecipe].inputTwo.quantity;
 
-				m_Output.whichItem = SelectedRecipe;
+				m_Output.whichItem = m_SelectedRecipe;
 				m_Output.quantity += 1;
 
 				//std::cout << "crafted " << m_Output.quantity << " of " << SelectedRecipe << "\n";
@@ -75,17 +75,17 @@ Buildings::Items Fabricator::TakeOutputItem()
 
 void Fabricator::ValidInputs(Buildings::Items& firstInput, Buildings::Items& secondInput)
 {
-	firstInput = m_RecipeTable[SelectedRecipe].inputOne.whichItem;
-	secondInput = m_RecipeTable[SelectedRecipe].inputTwo.whichItem;
+	firstInput = m_RecipeTable[m_SelectedRecipe].inputOne.whichItem;
+	secondInput = m_RecipeTable[m_SelectedRecipe].inputTwo.whichItem;
 }
 
 void Fabricator::InputItem(Buildings::Items whichItem)
 {
-	if (whichItem == m_RecipeTable[SelectedRecipe].inputOne.whichItem)
+	if (whichItem == m_RecipeTable[m_SelectedRecipe].inputOne.whichItem)
 	{
 		m_Input[0].quantity += 1;
 	}
-	else if (whichItem == m_RecipeTable[SelectedRecipe].inputTwo.whichItem)
+	else if (whichItem == m_RecipeTable[m_SelectedRecipe].inputTwo.whichItem)
 	{
 		m_Input[1].quantity += 1;
 	}
@@ -93,13 +93,13 @@ void Fabricator::InputItem(Buildings::Items whichItem)
 
 void Fabricator::SetRecipe(Items whichItem)
 {
-	SelectedRecipe = whichItem;
+	m_SelectedRecipe = whichItem;
 
 	m_Input[0].quantity = 0;
 	m_Input[1].quantity = 0;
 
-	m_Input[0].whichItem = m_RecipeTable[SelectedRecipe].inputOne.whichItem;
-	m_Input[1].whichItem = m_RecipeTable[SelectedRecipe].inputTwo.whichItem;
+	m_Input[0].whichItem = m_RecipeTable[m_SelectedRecipe].inputOne.whichItem;
+	m_Input[1].whichItem = m_RecipeTable[m_SelectedRecipe].inputTwo.whichItem;
 }
 
 void Fabricator::ChangeShowInterface(bool show)
@@ -109,11 +109,16 @@ void Fabricator::ChangeShowInterface(bool show)
 
 void Fabricator::GetInputBufferNeeds(bool& needsFirstInput, bool& needsSecondInput)
 {
-	needsFirstInput = (m_Input[0].quantity < 5 * m_RecipeTable[SelectedRecipe].inputOne.quantity);
-	needsSecondInput = (m_Input[1].quantity < 5 * m_RecipeTable[SelectedRecipe].inputTwo.quantity);
+	needsFirstInput = (m_Input[0].quantity < 5 * m_RecipeTable[m_SelectedRecipe].inputOne.quantity);
+	needsSecondInput = (m_Input[1].quantity < 5 * m_RecipeTable[m_SelectedRecipe].inputTwo.quantity);
 }
 
 bool Fabricator::GetShowInterface() const
 {
 	return m_ShowInterface;
+}
+
+Buildings::Items Fabricator::GetSelectedRecipe() const
+{
+	return m_SelectedRecipe;
 }

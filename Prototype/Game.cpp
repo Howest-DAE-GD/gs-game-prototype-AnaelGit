@@ -20,12 +20,17 @@ void Game::Initialize( )
 	std::cout << "First of all, the controls:\n";
 	std::cout << " - p, to pause/unpause\n";
 	std::cout << " - the arrowkeys to move around\n";
-	std::cout << " - the scrollwheel to zome in/out\n";
+	std::cout << " - the scrollwheel to zoom in/out\n";
 	std::cout << " - right click to destroy a building\n";
 	std::cout << " - left click to build a building\n";
 	std::cout << "   left click can also be used on a fabricator to change its recipe\n";
-	std::cout << " - 1 to 4, to select a building (1,miner / 2,conveyor belt / 3,Fabricator / 4,Spreader)\n";
-	std::cout << " - r, to rotate the conveyor belt clockwise, must be done before placing it (hold shift at the same time for counter clockwise)\n\n";
+	std::cout << "   for example: CompactNephir { NephirOre, 5 } 0.5sec\n";
+	std::cout << "   what does it make {inputs needed and in what quantity} and craft time\n";
+	std::cout << " - 1 to 4, to select a building (1-miner / 2-conveyor belt / 3-Fabricator / 4-Spreader)\n";
+	std::cout << " - r, to rotate the conveyor belt clockwise, must be done before placing it (hold shift at the same time for counter clockwise)\n";
+	std::cout << " - h, to show/hide a image demonstrating the most basic setup\n\n";
+
+	std::cout << "extra info: coneyor belt work by taking from what's behind them and buildings take from conveyor belt that point to them\n\n\n";
 
 	std::cout << "What the color of the tile mean:\n";
 	std::cout << " - Green just means that there is nothing noteworthy (think of it as grass)\n";
@@ -40,7 +45,9 @@ void Game::Initialize( )
 	std::cout << "This world is being corrupted and you will have to make a composite and spread it to counter the corruption's own spread.\n";
 	std::cout << "But you can't make composite from scratch, intermidiate items are needed.\n";
 	std::cout << "Extract ores, build machines and stop the corruption fast because the longer you take the faster it spreads!\n";
-	std::cout << "I wish you good luck.\n";
+	std::cout << "I wish you good luck.\n\n";
+
+	m_RecipeTreeTEXTrans.Scale = Vector2f(0.5, 0.5);
 }
 
 void Game::Cleanup( )
@@ -51,6 +58,7 @@ void Game::Cleanup( )
 	delete m_PausedText;
 	delete m_WonText;
 	delete m_LosedText;
+	delete m_RecipeTreeTEX;
 }
 
 void Game::Update( float elapsedSec )
@@ -83,10 +91,19 @@ void Game::Draw( ) const
 	m_GridTransformer.ResetTransformation();
 
 
+	if (m_ShowRecipeTree)
+	{
+		utils::SetColor(Color4f(0.5f, 0.5f, 0.5f, 0.4f));
+		utils::FillRect(Rectf(0, 0, G_WINDOW_SIZE.x, G_WINDOW_SIZE.y));
+
+		m_RecipeTreeTEXTrans.ApplyTransformation();
+		m_RecipeTreeTEX->Draw();
+		m_RecipeTreeTEXTrans.ResetTransformation();
+	}
 
 	if (m_IsGamePaused)
 	{
-		utils::SetColor(Color4f(0.1f, 0.1f, 0.1f, 0.3f));
+		utils::SetColor(Color4f(0.5f, 0.5f, 0.5f, 0.3f));
 		utils::FillRect(Rectf(0, G_WINDOW_SIZE.y * 1 / 3, G_WINDOW_SIZE.x, m_PausedText->GetHeight()));
 
 		m_PausedTextTrans.ApplyTransformation();
@@ -163,6 +180,12 @@ void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
 		break;
 	case SDLK_LSHIFT:
 		m_PrestedKeys.shift = true;
+		break;
+	case SDLK_h:
+		if (m_GridPtr->GetGameEndState() == Grid::GameEnds::stillPlaying)
+		{
+			m_ShowRecipeTree = (m_ShowRecipeTree + 1) % 2;
+		}
 		break;
 	}
 }
