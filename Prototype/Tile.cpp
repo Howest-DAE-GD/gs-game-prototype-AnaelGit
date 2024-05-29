@@ -8,8 +8,8 @@ Tile::Tile()
 	//done
 }
 
-Tile::Tile(EnvironmentalTileTypes environmentalTileType, bool isCorrupted)
-	: m_EnvironmentalTileType{ environmentalTileType }, m_IsCorrupted{isCorrupted}
+Tile::Tile(EnvironmentalTileTypes environmentalTileType, Tile::CorruptionState corruptedState)
+	: m_EnvironmentalTileType{ environmentalTileType }, m_CorruptionState{ corruptedState  }
 {
 	ChangeToCorrectColor();
 }
@@ -23,6 +23,12 @@ void Tile::Draw(int posX, int posY, int tileSize) const
 {
 	utils::SetColor(m_Color);
 	utils::FillRect(posX * tileSize, posY * tileSize, tileSize, tileSize);
+
+	if (m_CorruptionState == Tile::CorruptionState::antiCorruption)
+	{
+		utils::SetColor(Color4f(0.68f, 0.89f, 1.0f, 0.2f));
+		utils::FillRect(posX * tileSize, posY * tileSize, tileSize, tileSize);
+	}
 }
 
 void Tile::ChangeTile(EnvironmentalTileTypes environmentalTileType)
@@ -32,9 +38,9 @@ void Tile::ChangeTile(EnvironmentalTileTypes environmentalTileType)
 	ChangeToCorrectColor();
 }
 
-void Tile::ChangeTileCorruption(bool isCorrupted)
+void Tile::ChangeTileCorruption(Tile::CorruptionState corruptionState)
 {
-	m_IsCorrupted = isCorrupted;
+	m_CorruptionState = corruptionState;
 
 	ChangeToCorrectColor();
 }
@@ -49,14 +55,14 @@ Color4f Tile::GetColor() const
 	return m_Color;
 }
 
-bool Tile::GetIsCorrupted() const
+Tile::CorruptionState Tile::GetCorruptionState() const
 {
-	return m_IsCorrupted;
+	return m_CorruptionState;
 }
 
 void Tile::ChangeToCorrectColor()
 {
-	if (m_IsCorrupted)
+	if (m_CorruptionState == CorruptionState::corrupted)
 	{
 		m_Color = { Color4f(0.25, 0.0f, 0.5f, 1.0f) };
 	}
@@ -69,11 +75,11 @@ void Tile::ChangeToCorrectColor()
 			break;
 
 		case AzulOre:
-			m_Color = { Color4f(0.7f, 0.7f, 0.3f, 1.0f) };
+			m_Color = { Color4f(0.3f, 0.7f, 0.6f, 1.0f) };
 			break;
 
 		case NephirOre:
-			m_Color = { Color4f(0.3f, 0.7f, 0.6f, 1.0f) };
+			m_Color = { Color4f(0.7f, 0.7f, 0.3f, 1.0f) };
 			break;
 
 		}

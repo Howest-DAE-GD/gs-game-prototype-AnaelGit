@@ -37,9 +37,10 @@ void Fabricator::Update()
 				//						  m_RecipeTable[SelectedRecipe].inputTwo.quantity << " of " << m_RecipeTable[SelectedRecipe].inputTwo.whichItem <<
 				//	"\nNumber of ticks to craft: " << m_RecipeTable[SelectedRecipe].ticksToCraft << "\n\n";
 
-				std::cout << m_Input[0].quantity << " of " << m_Input[0].whichItem << "\n";
-				std::cout << m_Input[1].quantity << " of " << m_Input[1].whichItem << "\n";
-				std::cout << m_Output.quantity << " of " << m_Output.whichItem << "\n\n\n";
+
+				//std::cout << m_Input[0].quantity << " of " << m_Input[0].whichItem << "\n";
+				//std::cout << m_Input[1].quantity << " of " << m_Input[1].whichItem << "\n";
+				//std::cout << m_Output.quantity << " of " << m_Output.whichItem << "\n\n\n";
 			}
 			else
 			{
@@ -93,10 +94,26 @@ void Fabricator::InputItem(Buildings::Items whichItem)
 void Fabricator::SetRecipe(Items whichItem)
 {
 	SelectedRecipe = whichItem;
+
+	m_Input[0].quantity = 0;
+	m_Input[1].quantity = 0;
+
+	m_Input[0].whichItem = m_RecipeTable[SelectedRecipe].inputOne.whichItem;
+	m_Input[1].whichItem = m_RecipeTable[SelectedRecipe].inputTwo.whichItem;
+}
+
+void Fabricator::ChangeShowInterface(bool show)
+{
+	m_ShowInterface = show;
 }
 
 void Fabricator::GetInputBufferNeeds(bool& needsFirstInput, bool& needsSecondInput)
 {
 	needsFirstInput = (m_Input[0].quantity < 5 * m_RecipeTable[SelectedRecipe].inputOne.quantity);
 	needsSecondInput = (m_Input[1].quantity < 5 * m_RecipeTable[SelectedRecipe].inputTwo.quantity);
+}
+
+bool Fabricator::GetShowInterface() const
+{
+	return m_ShowInterface;
 }

@@ -156,6 +156,7 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Miner.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Spreader.cpp" />
     <ClCompile Include="Tile.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +167,7 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Miner.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Spreader.h" />
     <ClInclude Include="Tile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

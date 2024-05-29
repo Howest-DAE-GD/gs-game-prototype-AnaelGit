@@ -21,20 +21,34 @@ Grid::~Grid()
 			DeleteBuilding(Xindex, Yindex);
 		}
 	}
+
+	delete m_CompactNephirRecipeText;
+	delete m_AzulireRecipeText;
+	delete m_CompositeRecipeText;
 }
 
 void Grid::Update()
 {
-	for (int index{}; index < m_CorruptionSpeed; ++index)
+	for (int index{}; index < int(m_CorruptionSpeed); ++index)
 	{
 		CorruptionSpread();
 	}
+	m_CorruptionSpeed += m_CorruptionSpreadAcceleration;
+	std::cout << m_CorruptionSpeed << "\n";
 
+	int nbrOfCorruptedTile = 0 ;
 
 	for (int Yindex{}; Yindex < m_GridHeight; ++Yindex)
 	{
 		for (int Xindex{}; Xindex < m_GridWidth; ++Xindex)
 		{
+			//counts the number of corrupted tiles for win/lose conditions
+			if (m_Grid[Xindex][Yindex]->GetCorruptionState() == Tile::CorruptionState::corrupted)
+			{
+				nbrOfCorruptedTile += 1;
+			}
+
+
 			if (m_GridBuildings[Xindex][Yindex] != nullptr)
 			{
 				Point2f bottomLeftPos{ m_GridBuildings[Xindex][Yindex]->GetBottomLeftPos() };
@@ -45,24 +59,42 @@ void Grid::Update()
 					m_GridBuildings[Xindex][Yindex]->Update();	// update
 
 
-
+					// fabricator need to look around itself for inputs
 					if (m_GridBuildings[Xindex][Yindex]->GetBuidlingType() == Buildings::fabricator)
 					{
-						bool firstInputNeeds			{ false };
-						bool secondInputNeeds			{ false };
+						bool firstInputNeeds{ false };
+						bool secondInputNeeds{ false };
 						dynamic_cast<Fabricator*>(m_GridBuildings[Xindex][Yindex])->GetInputBufferNeeds(firstInputNeeds, secondInputNeeds);	// get what the fabricator needs by reference
 
-						if (firstInputNeeds 
+						if (firstInputNeeds
 							|| secondInputNeeds)
 						{
-							Buildings::Items firstInput		{ Buildings::Items::empty };
-							Buildings::Items secondInput	{ Buildings::Items::empty };
+							Buildings::Items firstInput{ Buildings::Items::empty };
+							Buildings::Items secondInput{ Buildings::Items::empty };
 							dynamic_cast<Fabricator*>(m_GridBuildings[Xindex][Yindex])->ValidInputs(firstInput, secondInput);				// get what items the fabricator wants by reference
 
-							FabricatorInputs(-1,-1, 0, 2, Xindex, Yindex, ConveyorBelt::Direction::right, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
-							FabricatorInputs( 3, 3, 0, 2, Xindex, Yindex, ConveyorBelt::Direction::left, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
-							FabricatorInputs( 0, 2,-1,-1, Xindex, Yindex, ConveyorBelt::Direction::up, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
-							FabricatorInputs( 0, 2, 3, 3, Xindex, Yindex, ConveyorBelt::Direction::down, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
+							BigBuildingInputs(-1, -1, 0, 2, Xindex, Yindex, ConveyorBelt::Direction::right, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
+							BigBuildingInputs(3, 3, 0, 2, Xindex, Yindex, ConveyorBelt::Direction::left, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
+							BigBuildingInputs(0, 2, -1, -1, Xindex, Yindex, ConveyorBelt::Direction::up, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
+							BigBuildingInputs(0, 2, 3, 3, Xindex, Yindex, ConveyorBelt::Direction::down, firstInput, firstInputNeeds, secondInput, secondInputNeeds);
+						}
+					}
+
+					// spreader need to look around itself for inputs
+					if (m_GridBuildings[Xindex][Yindex]->GetBuidlingType() == Buildings::spreader)
+					{
+						bool tempNeeds{ false };
+						dynamic_cast<Spreader*>(m_GridBuildings[Xindex][Yindex])->GetInputBufferNeeds(tempNeeds);
+
+						if (tempNeeds)
+						{
+							Buildings::Items tempValidInput{ Buildings::Items::empty };
+							dynamic_cast<Spreader*>(m_GridBuildings[Xindex][Yindex])->ValidInputs(tempValidInput);
+
+							BigBuildingInputs(-1, -1, 0, 4, Xindex, Yindex, ConveyorBelt::Direction::right, tempValidInput, tempNeeds, tempValidInput, tempNeeds);
+							BigBuildingInputs(5, 5, 0, 4, Xindex, Yindex, ConveyorBelt::Direction::left, tempValidInput, tempNeeds, tempValidInput, tempNeeds);
+							BigBuildingInputs(0, 4, -1, -1, Xindex, Yindex, ConveyorBelt::Direction::up, tempValidInput, tempNeeds, tempValidInput, tempNeeds);
+							BigBuildingInputs(0, 4, 5, 5, Xindex, Yindex, ConveyorBelt::Direction::down, tempValidInput, tempNeeds, tempValidInput, tempNeeds);
 						}
 					}
 				}
@@ -70,13 +102,15 @@ void Grid::Update()
 		}
 	}
 
-	// conveyor belt are special and need more that one update cycle to avoid direction dependency
 	for (int Yindex{}; Yindex < m_GridHeight; ++Yindex)
 	{
 		for (int Xindex{}; Xindex < m_GridWidth; ++Xindex)
 		{
 			if (m_GridBuildings[Xindex][Yindex] != nullptr)																//is there a building
 			{
+				// conveyor belt are special and need more that one update cycle to avoid direction dependency
+
+
 				if (m_GridBuildings[Xindex][Yindex]->GetBuidlingType() == Buildings::conveyorBelt)						// is it a belt
 				{
 					if (dynamic_cast<ConveyorBelt*>(m_GridBuildings[Xindex][Yindex])->hasEmptyInput())					// does the belt have a empty slot for a new item ?
@@ -106,7 +140,7 @@ void Grid::Update()
 						}
 
 
-						if (Xindex + lookupOffsetX >= 0						// is the the position behind the belt even in the grid ?
+						if (Xindex + lookupOffsetX >= 0																	// is the the position behind the belt even in the grid ?
 							&& Xindex + lookupOffsetX < m_GridWidth
 							&& Yindex + lookupOffsetY >= 0
 							&& Yindex + lookupOffsetY < m_GridHeight)
@@ -130,8 +164,76 @@ void Grid::Update()
 						}
 					}
 				}
+
+				// Spreader spreading their cure
+				if (m_GridBuildings[Xindex][Yindex]->GetBuidlingType() == Buildings::spreader)						// is it a spreader
+				{
+					Point2f bottomLeftPos{ m_GridBuildings[Xindex][Yindex]->GetBottomLeftPos() };
+
+					if (Xindex == int(bottomLeftPos.x)
+						&& Yindex == int(bottomLeftPos.y))
+					{
+						if (dynamic_cast<Spreader*>(m_GridBuildings[Xindex][Yindex])->CanSpread())
+						{
+							for (int spreadXTimes{}; spreadXTimes < 5; spreadXTimes++)
+							{
+
+								int randNbr = rand() % 360;
+
+								bool hasYetTospread = true;
+								int spreadRange{};
+								float angleX = cos(randNbr);
+								float angleY = sin(randNbr);
+								int nbrOfTries{};
+								while (hasYetTospread && nbrOfTries < 10)
+								{
+									if (Xindex + 2 + angleX * spreadRange >= 0																	// is the the position behind the belt even in the grid ?
+										&& Xindex + 2 + angleX * spreadRange < m_GridWidth
+										&& Yindex + 2 + angleY * spreadRange >= 0
+										&& Yindex + 2 + angleY * spreadRange < m_GridHeight)
+									{
+										if (m_Grid[int(Xindex + 2 + angleX * spreadRange)][int(Yindex + 2 + angleY * spreadRange)]->GetCorruptionState() != Tile::CorruptionState::antiCorruption)
+										{
+											m_Grid[int(Xindex + 2 + angleX * spreadRange)][int(Yindex + 2 + angleY * spreadRange)]->ChangeTileCorruption(Tile::CorruptionState::antiCorruption);
+											hasYetTospread = false;
+										}
+
+										++spreadRange;
+									}
+									else
+									{
+										randNbr = rand() % 360;
+										angleX = cos(randNbr);
+										angleY = sin(randNbr);
+										spreadRange = 0;
+
+										nbrOfTries++;
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
+	}
+
+	// see if the game ended 
+	if (nbrOfCorruptedTile == m_GridWidth * m_GridHeight)
+	{
+		m_GameEndState = GameEnds::losed;
+	}
+	if (nbrOfCorruptedTile == 0)
+	{
+		m_GameEndState = GameEnds::won;
+	}
+
+	// change text position
+	if (m_IsCurrentlyShowingAFactoryInterface)
+	{
+		m_CompactNephirRecipeTextTrans.Position = Vector2f((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 14, (m_FactoryWithInterfacePos.y + 3) * M_TILE_SIZE + 14);
+		m_AzulireRecipeTextTrans.Position = Vector2f((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 14, (m_FactoryWithInterfacePos.y + 2) * M_TILE_SIZE + 14);
+		m_CompositeRecipeTextTrans.Position = Vector2f((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 14, (m_FactoryWithInterfacePos.y + 1) * M_TILE_SIZE + 14);
 	}
 }
 
@@ -168,6 +270,28 @@ void Grid::Draw() const
 			}
 		}
 	}
+
+	if (m_IsCurrentlyShowingAFactoryInterface)
+	{
+		utils::SetColor(Color4f(0.2f, 0.2f, 0.2f, 0.75f));
+		utils::FillRect((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 8, (m_FactoryWithInterfacePos.y + 1) * M_TILE_SIZE + 8, 8 * M_TILE_SIZE - 16, 3 * M_TILE_SIZE - 16);
+		for (int index{ 1 }; index <= 3; index++)
+		{
+			utils::FillRect((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 14, (m_FactoryWithInterfacePos.y + index) * M_TILE_SIZE + 14, 8 * M_TILE_SIZE - 28, M_TILE_SIZE - 28);
+		}
+
+		m_CompactNephirRecipeTextTrans.ApplyTransformation();
+		m_CompactNephirRecipeText->Draw();
+		m_CompactNephirRecipeTextTrans.ResetTransformation();
+
+		m_AzulireRecipeTextTrans.ApplyTransformation();
+		m_AzulireRecipeText->Draw();
+		m_AzulireRecipeTextTrans.ResetTransformation();
+
+		m_CompositeRecipeTextTrans.ApplyTransformation();
+		m_CompositeRecipeText->Draw();
+		m_CompositeRecipeTextTrans.ResetTransformation();
+	}
 }
 
 void Grid::ChangeTile(int posX, int posY, Tile::EnvironmentalTileTypes environmentalTileType)
@@ -175,14 +299,82 @@ void Grid::ChangeTile(int posX, int posY, Tile::EnvironmentalTileTypes environme
 	m_Grid[posX][posY]->ChangeTile(environmentalTileType);
 }
 
-void Grid::ChangeSelectedBuilding(int incrementToBuilding)
+void Grid::ChangeSelectedBuilding(Buildings::BuildingTypes buildingType)
 {
-	m_SelectedBuilding = Buildings::BuildingTypes((m_SelectedBuilding + incrementToBuilding) % 3);
+	m_SelectedBuilding = buildingType;
+	if (buildingType == Buildings::conveyorBelt)
+	{
+		m_SelectedDirection = ConveyorBelt::Direction::up;
+	}
 }
 
 void Grid::ChangeSelectedDirection(int incrementToDirection)
 {
-	m_SelectedDirection = ConveyorBelt::Direction((m_SelectedDirection + incrementToDirection) % 4);
+	if (m_SelectedDirection + incrementToDirection >= 0)
+	{
+		m_SelectedDirection = ConveyorBelt::Direction((m_SelectedDirection + incrementToDirection) % 4);
+	}
+	else
+	{
+		m_SelectedDirection = ConveyorBelt::Direction::left;
+	}
+}
+
+void Grid::LeftClick(int posX, int posY, bool& disableLeftClickTemporarily)
+{
+	disableLeftClickTemporarily = true;
+	if (m_IsCurrentlyShowingAFactoryInterface)
+	{
+		for (int Yindex{-3}; Yindex < 0; Yindex++)
+		{
+			for (int Xindex{-8}; Xindex < 0; Xindex++)
+			{
+				if (posX + Xindex == int(m_FactoryWithInterfacePos.x)
+					&& posY + Yindex == int(m_FactoryWithInterfacePos.y))
+				{
+					switch (Yindex)
+					{
+					case -3:
+						dynamic_cast<Fabricator*>(m_GridBuildings[int(m_FactoryWithInterfacePos.x)][int(m_FactoryWithInterfacePos.y)])->SetRecipe(Buildings::Items::CompactNephir);
+						break;
+
+					case -2:
+						dynamic_cast<Fabricator*>(m_GridBuildings[int(m_FactoryWithInterfacePos.x)][int(m_FactoryWithInterfacePos.y)])->SetRecipe(Buildings::Items::Azulire);
+						break;
+
+					case -1:
+						dynamic_cast<Fabricator*>(m_GridBuildings[int(m_FactoryWithInterfacePos.x)][int(m_FactoryWithInterfacePos.y)])->SetRecipe(Buildings::Items::Composite);
+						break;
+					}
+				}
+			}
+		}
+
+		dynamic_cast<Fabricator*>(m_GridBuildings[int(m_FactoryWithInterfacePos.x)][int(m_FactoryWithInterfacePos.y)])->ChangeShowInterface(false);
+		m_IsCurrentlyShowingAFactoryInterface = false;
+		m_FactoryWithInterfacePos = Point2f(m_GridWidth, m_GridHeight);
+	}
+	else
+	{
+		if (m_GridBuildings[posX][posY] != nullptr)
+		{
+			if (m_GridBuildings[posX][posY]->GetBuidlingType() == Buildings::BuildingTypes::fabricator)
+			{
+				dynamic_cast<Fabricator*>(m_GridBuildings[posX][posY])->ChangeShowInterface(true);
+				m_IsCurrentlyShowingAFactoryInterface = true;
+				m_FactoryWithInterfacePos = Point2f(posX, posY);
+			}
+			else
+			{
+				disableLeftClickTemporarily = false;
+			}
+		}
+		else
+		{
+			PlaceBuilding(posX, posY);
+			disableLeftClickTemporarily = false;
+		}
+	}
 }
 
 void Grid::PlaceBuilding(int posX, int posY)
@@ -199,7 +391,7 @@ void Grid::PlaceBuilding(int posX, int posY)
 			for (int Xindex{}; Xindex < width; ++Xindex)
 			{
 				if (!(m_GridBuildings[posX + Xindex][posY + Yindex] == nullptr
-					&& m_Grid[posX + Xindex][posY + Yindex]->GetIsCorrupted() == 0))
+					&& m_Grid[posX + Xindex][posY + Yindex]->GetCorruptionState() != Tile::CorruptionState::corrupted))
 				{
 					isThereEnoughPlace = false;
 				}
@@ -256,6 +448,10 @@ void Grid::PlaceBuilding(int posX, int posY)
 		case Buildings::fabricator:
 			ptr = new Fabricator(Buildings::BuildingTypes::fabricator, posX, posY, m_BuildingDimensionTable[m_SelectedBuilding].width, m_BuildingDimensionTable[m_SelectedBuilding].height);
 			break;
+
+		case Buildings::spreader:
+			ptr = new Spreader(Buildings::BuildingTypes::spreader, posX, posY, m_BuildingDimensionTable[m_SelectedBuilding].width, m_BuildingDimensionTable[m_SelectedBuilding].height);
+			break;
 		}
 
 		for (int Yindex{}; Yindex < height; ++Yindex)
@@ -272,6 +468,14 @@ void Grid::DeleteBuilding(int posX, int posY)
 {
 	if (m_GridBuildings[posX][posY] != nullptr)
 	{
+		if (m_IsCurrentlyShowingAFactoryInterface)
+		{
+			dynamic_cast<Fabricator*>(m_GridBuildings[int(m_FactoryWithInterfacePos.x)][int(m_FactoryWithInterfacePos.y)])->ChangeShowInterface(false);
+			m_IsCurrentlyShowingAFactoryInterface = false;
+			m_FactoryWithInterfacePos = Point2f(m_GridWidth, m_GridHeight);
+		}
+
+
 		Point2f bottomLeftPos{ m_GridBuildings[posX][posY]->GetBottomLeftPos() };
 		Buildings* ptr{ m_GridBuildings[posX][posY] };
 
@@ -305,12 +509,17 @@ int Grid::GetM_TILE_SIZE() const
 	return M_TILE_SIZE;
 }
 
+Grid::GameEnds Grid::GetGameEndState() const
+{
+	return m_GameEndState;
+}
+
 void Grid::CorruptionSpread()
 {
 	int RandPosX{ rand() % m_GridWidth };
 	int RandPosY{ rand() % m_GridHeight };
 
-	if (m_Grid[RandPosX][RandPosY]->GetIsCorrupted())
+	if (m_Grid[RandPosX][RandPosY]->GetCorruptionState() == Tile::CorruptionState::corrupted)
 	{
 		int RandVariationX{ (rand() % 7) - 3 };
 		int RandVariationY{ (rand() % 7) - 3 };
@@ -320,8 +529,20 @@ void Grid::CorruptionSpread()
 			&& RandPosY + RandVariationY >= 0
 			&& RandPosY + RandVariationY < m_GridHeight)
 		{
-			m_Grid[RandPosX + RandVariationX][RandPosY + RandVariationY]->ChangeTileCorruption(true); // corrupt a tile (can already be corrupted)
-			DeleteBuilding(RandPosX + RandVariationX, RandPosY + RandVariationY);
+			if (m_Grid[RandPosX + RandVariationX][RandPosY + RandVariationY]->GetCorruptionState() == Tile::CorruptionState::antiCorruption)
+			{
+				if ((rand() % 10) == 0)
+				{
+					m_Grid[RandPosX + RandVariationX][RandPosY + RandVariationY]->ChangeTileCorruption(Tile::CorruptionState::corrupted); // corrupt a tile (can already be corrupted)
+					DeleteBuilding(RandPosX + RandVariationX, RandPosY + RandVariationY);
+				}
+			}
+			else
+			{
+				m_Grid[RandPosX + RandVariationX][RandPosY + RandVariationY]->ChangeTileCorruption(Tile::CorruptionState::corrupted); // corrupt a tile (can already be corrupted)
+				DeleteBuilding(RandPosX + RandVariationX, RandPosY + RandVariationY);
+			}
+
 		}
 	}
 }
@@ -343,48 +564,44 @@ void Grid::Populate()
 	{
 		for (int Xindex{}; Xindex < m_GridWidth; ++Xindex)
 		{
-			int randNbr{ rand() % 1000 };
+			int randNbr{ rand() % 2000 };
 			if (randNbr < 4)
 			{
-				if (randNbr < 1)
+				int randX = 0;
+				int randY = 0;
+
+
+				for (int nbrOfMergedPatches{}; nbrOfMergedPatches < 2; nbrOfMergedPatches++)
 				{
+					if (nbrOfMergedPatches > 0)
+					{
+						randX = (rand() % 7) - 3;
+						randY = (rand() % 7) - 3;
+					}
+
 					for (int YPopulate{ -2 }; YPopulate < 3; ++YPopulate)								// populate around the squar 
 					{
 						for (int XPopulate{ -2 }; XPopulate < 3; ++XPopulate)
 						{
-							if (Yindex + YPopulate >= 0												// is it in the array?
-								&& Yindex + YPopulate < m_GridHeight
-								&& Xindex + XPopulate >= 0
-								&& Xindex + XPopulate < m_GridWidth)
+							if (Yindex + YPopulate + randX >= 0												// is it in the array?
+								&& Yindex + YPopulate + randX < m_GridHeight
+								&& Xindex + XPopulate + randY >= 0
+								&& Xindex + XPopulate + randY < m_GridWidth)
 							{
 								if (!(YPopulate == -2 && XPopulate == -2							// populate around the squar (except the corners)
 									|| YPopulate == -2 && XPopulate == 2
 									|| YPopulate == 2 && XPopulate == 2
 									|| YPopulate == 2 && XPopulate == -2))
 								{
-									m_Grid[Xindex + XPopulate][Yindex + YPopulate]->ChangeTile(Tile::EnvironmentalTileTypes::AzulOre);
-								}
-							}
-						}
-					}
-				}
-				else
-				{
-					for (int YPopulate{ -2 }; YPopulate < 3; ++YPopulate)							// populate around the squar
-					{
-						for (int XPopulate{ -2 }; XPopulate < 3; ++XPopulate)
-						{
-							if (Yindex + YPopulate >= 0												// is it in the array?
-								&& Yindex + YPopulate < m_GridHeight
-								&& Xindex + XPopulate >= 0
-								&& Xindex + XPopulate < m_GridWidth)
-							{
-								if (!(YPopulate == -2 && XPopulate == -2							// populate around the squar (except the corners)
-									|| YPopulate == -2 && XPopulate == 2
-									|| YPopulate == 2 && XPopulate == 2
-									|| YPopulate == 2 && XPopulate == -2))
-								{
-									m_Grid[Xindex + XPopulate][Yindex + YPopulate]->ChangeTile(Tile::EnvironmentalTileTypes::NephirOre);
+									if (randNbr < 2)
+									{
+										m_Grid[Xindex + XPopulate + randY][Yindex + YPopulate + randX]->ChangeTile(Tile::EnvironmentalTileTypes::AzulOre);
+									}
+									else
+									{
+										m_Grid[Xindex + XPopulate + randY][Yindex + YPopulate + randX]->ChangeTile(Tile::EnvironmentalTileTypes::NephirOre);
+
+									}
 								}
 							}
 						}
@@ -406,13 +623,18 @@ void Grid::CorruptGrid()
 				|| (Xindex == 0
 					|| Xindex == m_GridWidth - 1))
 			{
-				m_Grid[Xindex][Yindex]->ChangeTileCorruption(true);
+				m_Grid[Xindex][Yindex]->ChangeTileCorruption(Tile::CorruptionState::corrupted);
 			}
 		}
 	}
+
+	for (int index{}; index < 20000; ++index)
+	{
+		CorruptionSpread();
+	}
 }
 
-void Grid::FabricatorInputs( int lookupOffsetXStart, int lookupOffsetXEnd, int lookupOffsetYStart, int lookupOffsetYEnd, int Xindex, int Yindex, ConveyorBelt::Direction looksAwayOfTheFabricator, Buildings::Items firstInput, bool firstInputNeeds, Buildings::Items secondInput, bool secondInputNeeds)
+void Grid::BigBuildingInputs(int lookupOffsetXStart, int lookupOffsetXEnd, int lookupOffsetYStart, int lookupOffsetYEnd, int Xindex, int Yindex, ConveyorBelt::Direction looksAwayOfTheFabricator, Buildings::Items firstInput, bool firstInputNeeds, Buildings::Items secondInput, bool secondInputNeeds)
 {
 	for (int lookupOffsetY{ lookupOffsetYStart }; lookupOffsetY <= lookupOffsetYEnd; ++lookupOffsetY)
 	{
@@ -435,7 +657,18 @@ void Grid::FabricatorInputs( int lookupOffsetXStart, int lookupOffsetXEnd, int l
 								Buildings::Items item = m_GridBuildings[Xindex + lookupOffsetX][Yindex + lookupOffsetY]->TakeOutputItem();
 								if (not (item == Buildings::Items::empty))
 								{
-									dynamic_cast<Fabricator*>(m_GridBuildings[Xindex][Yindex])->InputItem(item);
+									Buildings::BuildingTypes tempBuildingType = m_GridBuildings[Xindex][Yindex]->GetBuidlingType();
+
+									switch (tempBuildingType)
+									{
+									case Buildings::BuildingTypes::fabricator:
+										dynamic_cast<Fabricator*>(m_GridBuildings[Xindex][Yindex])->InputItem(item);
+										break;
+
+									case Buildings::BuildingTypes::spreader:
+										dynamic_cast<Spreader*>(m_GridBuildings[Xindex][Yindex])->InputItem(item);
+										break;
+									}
 								}
 							}
 
@@ -446,7 +679,18 @@ void Grid::FabricatorInputs( int lookupOffsetXStart, int lookupOffsetXEnd, int l
 								Buildings::Items item = m_GridBuildings[Xindex + lookupOffsetX][Yindex + lookupOffsetY]->TakeOutputItem();
 								if (not (item == Buildings::Items::empty))
 								{
-									dynamic_cast<Fabricator*>(m_GridBuildings[Xindex][Yindex])->InputItem(item);
+									Buildings::BuildingTypes tempBuildingType = m_GridBuildings[Xindex][Yindex]->GetBuidlingType();
+
+									switch (tempBuildingType)
+									{
+									case Buildings::BuildingTypes::fabricator:
+										dynamic_cast<Fabricator*>(m_GridBuildings[Xindex][Yindex])->InputItem(item);
+										break;
+
+									case Buildings::BuildingTypes::spreader:
+										dynamic_cast<Spreader*>(m_GridBuildings[Xindex][Yindex])->InputItem(item);
+										break;
+									}
 								}
 							}
 						}

@@ -1,5 +1,6 @@
 #include "Buildings.h"
 
+
 #pragma once
 class Fabricator : public Buildings
 {
@@ -19,8 +20,10 @@ public:
 	void InputItem(Buildings::Items whichItem);
 
 	void SetRecipe(Items whichItem);
+	void ChangeShowInterface(bool show);
 
 	void GetInputBufferNeeds(bool& needsFirstInput,bool& needsSecondInput);
+	bool GetShowInterface() const;
 
 private:
 	Color4f m_Color{ Color4f(0.2f, 0.2f, 0.9f, 1.0f) };
@@ -29,6 +32,7 @@ private:
 	Storage m_Output					{ Buildings::Items::empty, 0 };
 
 	Buildings::Items SelectedRecipe		{Items::Azulire};
+	bool m_ShowInterface		{false};
 
 	int m_TickTimer						{};
 };

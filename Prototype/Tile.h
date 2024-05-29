@@ -13,10 +13,17 @@ public:
 		AzulOre = 2,
 	};
 
+	enum CorruptionState
+	{
+		nothing,
+		corrupted,
+		antiCorruption
+	};
+
 
 	//	constructor / destructor
 	Tile();
-	Tile(EnvironmentalTileTypes environmentalTileType, bool isCorrupted);
+	Tile(EnvironmentalTileTypes environmentalTileType, Tile::CorruptionState corruptedState);
 	~Tile();
 
 
@@ -25,18 +32,18 @@ public:
 
 	//	functions when called
 	void ChangeTile(EnvironmentalTileTypes environmentalTileType);
-	void ChangeTileCorruption(bool isCorrupted);
+	void ChangeTileCorruption(Tile::CorruptionState corruptionState);
 
 	EnvironmentalTileTypes GetEnvironmentalTileType() const;
 	Color4f GetColor() const;
-	bool GetIsCorrupted() const;
+	CorruptionState GetCorruptionState() const;
 	
 
 private:
 	void ChangeToCorrectColor();
 
 	EnvironmentalTileTypes m_EnvironmentalTileType		{ empty };
-	bool m_IsCorrupted									{ false };
+	CorruptionState m_CorruptionState					{ CorruptionState::nothing };
 	Color4f m_Color										{ Color4f(0.2f, 0.6f, 0.2f, 1.f) };
 };
 

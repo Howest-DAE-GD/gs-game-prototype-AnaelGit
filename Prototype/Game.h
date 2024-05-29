@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseGame.h"
 #include "Transform.h"
+#include "Texture.h"
 #include <vector>
 #include "Grid.h"
 
@@ -58,6 +59,7 @@ private:
 		bool right;
 		bool leftClick;
 		bool rightClick;
+		bool shift;
 	} m_PrestedKeys								{};
 
 	Grid* m_GridPtr								{ new Grid() };
@@ -65,4 +67,14 @@ private:
 	const int M_NBR_OF_UPDATES_A_SEC			{ 60 };
 	float m_Timer								{};
 	int m_CappedUpdate							{};
+
+	const std::string m_TextPath{ "Roboto-Regular.ttf" };
+	const Texture* m_PausedText = new Texture("PAUSED", m_TextPath, 50, Color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
+	Transform m_PausedTextTrans {m_PausedTextTrans.Position = Vector2f( - m_PausedText->GetWidth() / 2 + G_WINDOW_SIZE.x / 2, G_WINDOW_SIZE.y * 1 / 3)};
+	const Texture* m_WonText = new Texture("<YOU WIN>", m_TextPath, 50, Color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
+	Transform m_WonTextTrans{ m_WonTextTrans.Position = Vector2f(-m_PausedText->GetWidth() / 2 + G_WINDOW_SIZE.x / 2, G_WINDOW_SIZE.y * 2 / 3) };
+	const Texture* m_LosedText = new Texture("<YOU LOSE>", m_TextPath, 50, Color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
+	Transform m_LosedTextTrans{ m_LosedTextTrans.Position = Vector2f(-m_PausedText->GetWidth() / 2 + G_WINDOW_SIZE.x / 2, G_WINDOW_SIZE.y * 2 / 3) };
+
+	bool m_IsGamePaused							{ false };
 };
