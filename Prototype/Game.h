@@ -57,6 +57,12 @@ private:
 		bool down;
 		bool left;
 		bool right;
+
+		bool z;
+		bool q;
+		bool s;
+		bool d;
+
 		bool leftClick;
 		bool rightClick;
 		bool shift;
@@ -76,9 +82,22 @@ private:
 	const Texture* m_LosedText = new Texture("<YOU LOSE>", m_TextPath, 50, Color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
 	Transform m_LosedTextTrans{ m_LosedTextTrans.Position = Vector2f(-m_PausedText->GetWidth() / 2 + G_WINDOW_SIZE.x / 2, G_WINDOW_SIZE.y * 2 / 3) };
 	const Texture* m_RecipeTreeTEX = new Texture("CorrCureRecipeTree.png");
-	Transform m_RecipeTreeTEXTrans{ m_RecipeTreeTEXTrans.Position = Vector2f( 0.5 * ( - m_RecipeTreeTEX->GetWidth() / 2) + G_WINDOW_SIZE.x / 2, 0.5  * (-m_RecipeTreeTEX->GetHeight() / 2) + G_WINDOW_SIZE.y / 2)};
+	Transform m_RecipeTreeTEXTrans{ m_RecipeTreeTEXTrans.Position = Vector2f( 0.8 * ( - m_RecipeTreeTEX->GetWidth() / 2) + G_WINDOW_SIZE.x / 2, 0.8  * (-m_RecipeTreeTEX->GetHeight() / 2) + G_WINDOW_SIZE.y / 2)};
 
 	bool m_ShowRecipeTree						{ false };
 
 	bool m_IsGamePaused							{ false };
+
+	bool m_IsChoosingCorruptionSpeed			{ true };
+
+
+	const Texture* m_MinerSelectedText = new Texture("miner", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_ConveyorBeltSelectedText = new Texture("conveyor belt ", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_FabricatorSelectedText = new Texture("fabricator", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_SpreaderSelectedText = new Texture("spreader", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+
+	const Texture* m_BeltUpText = new Texture("up", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_BeltDownText = new Texture("down", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_BeltLeftText = new Texture("left", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_BeltRightText = new Texture("right", m_TextPath, 30, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
 };

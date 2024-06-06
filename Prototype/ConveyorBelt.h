@@ -39,6 +39,4 @@ private:
 
 	Storage m_Input									{ Buildings::Items::empty, 0 };
 	Storage m_Output								{ Buildings::Items::empty, 0 };
-	//int m_TickTimer{};
-	//static const int M_NBR_OF_TICKS_TO_Transfer		{ 30 };
 };

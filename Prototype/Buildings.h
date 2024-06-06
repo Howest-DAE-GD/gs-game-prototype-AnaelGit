@@ -90,7 +90,7 @@ protected:
 											  {conveyorBelt, true},
 											  {fabricator, true} };
 
-	Recipe m_RecipeTable[3]					{ {CompactNephir , {empty , 0}, { NephirOre, 5}, 30 },				// !!!!!the output items must have the same Index as in the Itemscenum!!!!!
+	Recipe m_RecipeTable[3]					{ {CompactNephir , {empty , 0}, { NephirOre, 4}, 30 },				// !!!!!the output items must have the same Index as in the Itemscenum!!!!!
 											  {Azulire , { AzulOre, 2}, { NephirOre, 1}, 30 },
 											  {Composite , { CompactNephir, 1}, { Azulire, 1}, 120 } };
 };

@@ -10,14 +10,6 @@ ConveyorBelt::ConveyorBelt(BuildingTypes buildingType, int posX, int posY, int w
 
 void ConveyorBelt::Update()
 {
-	//++m_TickTimer;
-	//if (m_TickTimer > M_NBR_OF_TICKS_TO_Transfer)
-	//{
-	//	m_TickTimer -= M_NBR_OF_TICKS_TO_Transfer;
-
-	//	MoveInputToOutput();
-	//}
-
 	MoveInputToOutput();
 }
 

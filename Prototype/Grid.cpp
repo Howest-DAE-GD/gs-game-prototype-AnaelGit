@@ -25,17 +25,32 @@ Grid::~Grid()
 	delete m_CompactNephirRecipeText;
 	delete m_AzulireRecipeText;
 	delete m_CompositeRecipeText;
+
+	delete m_CompactNephirSelected;
+	delete m_AzulireSelected;
+	delete m_CompositeSelected;
 }
 
 void Grid::Update()
 {
+	m_ResetEverySecond++;
+	if (m_ResetEverySecond >= 60)
+	{
+		m_ResetEverySecond -= 60;
+		m_CorruptionSpeed += m_CorruptionSpreadAcceleration;
+		std::cout << m_CorruptionSpeed << "\n";
+	}
+
 	for (int index{}; index < int(m_CorruptionSpeed); ++index)
 	{
 		CorruptionSpread();
 	}
-	m_CorruptionSpeed += m_CorruptionSpreadAcceleration;
 
+	// count the number of infected tiles
 	int nbrOfCorruptedTile = 0 ;
+
+	//counts the ticks to only update the belt less often
+	m_SlowerBeltUpdate++;
 
 	for (int Yindex{}; Yindex < m_GridHeight; ++Yindex)
 	{
@@ -55,7 +70,18 @@ void Grid::Update()
 				if (Xindex == int(bottomLeftPos.x)
 					&& Yindex == int(bottomLeftPos.y))
 				{
-					m_GridBuildings[Xindex][Yindex]->Update();	// update
+					if (m_GridBuildings[Xindex][Yindex]->GetBuidlingType() != Buildings::conveyorBelt)
+					{
+						m_GridBuildings[Xindex][Yindex]->Update();	// update
+					}
+					else
+					{
+						//counts the ticks to only update the belt less often
+						if (m_SlowerBeltUpdate >= m_BeltUpdateSpeed)
+						{
+							m_GridBuildings[Xindex][Yindex]->Update();
+						}
+					}
 
 
 					// fabricator need to look around itself for inputs
@@ -100,6 +126,13 @@ void Grid::Update()
 			}
 		}
 	}
+
+	//counts the ticks to only update the belt less often
+	if (m_SlowerBeltUpdate >= m_BeltUpdateSpeed)
+	{
+		m_SlowerBeltUpdate -= m_BeltUpdateSpeed;
+	}
+
 
 	for (int Yindex{}; Yindex < m_GridHeight; ++Yindex)
 	{
@@ -218,16 +251,21 @@ void Grid::Update()
 	}
 
 	// see if the game ended 
+
 	if (nbrOfCorruptedTile == m_GridWidth * m_GridHeight)
 	{
 		m_GameEndState = GameEnds::losed;
 	}
-	if (nbrOfCorruptedTile == 0)
+	else if (nbrOfCorruptedTile >= (m_GridWidth * m_GridHeight) * 95 / 100.f)
+	{
+		m_CorruptionSpreadAcceleration = m_CorruptionSpeed / 20;
+	}
+	else if (nbrOfCorruptedTile == 0)
 	{
 		m_GameEndState = GameEnds::won;
 	}
 
-	// change text position
+	// change recipe selection text position
 	if (m_IsCurrentlyShowingAFactoryInterface)
 	{
 		m_CompactNephirRecipeTextTrans.Position = Vector2f((m_FactoryWithInterfacePos.x + 1) * M_TILE_SIZE + 14, (m_FactoryWithInterfacePos.y + 3) * M_TILE_SIZE + 14);
@@ -265,6 +303,26 @@ void Grid::Draw() const
 					&& Yindex == int(bottomLeftPos.y))
 				{
 					m_GridBuildings[Xindex][Yindex]->Draw(Xindex, Yindex, M_TILE_SIZE);
+
+					if (m_GridBuildings[Xindex][Yindex]->GetBuidlingType() == Buildings::BuildingTypes::fabricator)
+					{
+						int selectedRecpie = dynamic_cast<Fabricator*>(m_GridBuildings[Xindex][Yindex])->GetSelectedRecipe();
+
+						switch (selectedRecpie)
+						{
+						case Buildings::Items::CompactNephir:
+							m_CompactNephirSelected->Draw(Rectf((Xindex + 1.5f) * M_TILE_SIZE - m_CompactNephirSelected->GetWidth() / 2, Yindex * M_TILE_SIZE + 16, m_CompactNephirSelected->GetWidth(), m_CompactNephirSelected->GetHeight()));
+							break;
+
+						case Buildings::Items::Azulire:
+							m_AzulireSelected->Draw(Rectf((Xindex + 1.5f) * M_TILE_SIZE - m_AzulireSelected->GetWidth() / 2, Yindex * M_TILE_SIZE + 16, m_AzulireSelected->GetWidth(), m_AzulireSelected->GetHeight()));
+							break;
+
+						case Buildings::Items::Composite:
+							m_CompositeSelected->Draw(Rectf((Xindex + 1.5f) * M_TILE_SIZE - m_CompositeSelected->GetWidth() / 2, Yindex * M_TILE_SIZE + 16, m_CompositeSelected->GetWidth(), m_CompositeSelected->GetHeight()));
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -303,6 +361,8 @@ void Grid::Draw() const
 		m_CompositeRecipeText->Draw();
 		m_CompositeRecipeTextTrans.ResetTransformation();
 	}
+
+
 }
 
 void Grid::ChangeTile(int posX, int posY, Tile::EnvironmentalTileTypes environmentalTileType)
@@ -505,6 +565,16 @@ void Grid::DeleteBuilding(int posX, int posY)
 	}
 }
 
+void Grid::ChangeCorruptionSpeed(float newSpeed)
+{
+	m_CorruptionSpeed = newSpeed;
+}
+
+void Grid::ChangeCorruptionSpreadAcceleration(float newSpreadAcceleration)
+{
+	m_CorruptionSpreadAcceleration = newSpreadAcceleration;
+}
+
 int Grid::GetGridWidth() const
 {
 	return m_GridWidth;
@@ -523,6 +593,16 @@ int Grid::GetM_TILE_SIZE() const
 Grid::GameEnds Grid::GetGameEndState() const
 {
 	return m_GameEndState;
+}
+
+Buildings::BuildingTypes Grid::GetSelectedBuilding() const
+{
+	return m_SelectedBuilding;
+}
+
+ConveyorBelt::Direction Grid::GetSelectedDirection() const
+{
+	return m_SelectedDirection;
 }
 
 void Grid::CorruptionSpread()

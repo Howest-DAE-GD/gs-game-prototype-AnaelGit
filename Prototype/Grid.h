@@ -59,10 +59,15 @@ public:
 	void PlaceBuilding(int posX, int posY);
 	void DeleteBuilding(int posX, int posY);
 
+	void ChangeCorruptionSpeed(float newSpeed);
+	void ChangeCorruptionSpreadAcceleration(float newSpreadAcceleration);
+
 	int GetGridWidth() const;
 	int GetGridHeight() const;
 	int GetM_TILE_SIZE() const;
 	GameEnds GetGameEndState() const;
+	Buildings::BuildingTypes GetSelectedBuilding() const;
+	ConveyorBelt::Direction GetSelectedDirection() const;
 
 private:
 
@@ -83,8 +88,10 @@ private:
 	Tile* m_Grid[m_GridWidth][m_GridHeight];
 	Buildings* m_GridBuildings[m_GridWidth][m_GridHeight]		{};
 
-	float m_CorruptionSpeed										{1};
-	const float m_CorruptionSpreadAcceleration					{ 1/36000.f};
+	float m_CorruptionSpeed										{ 2 };
+	float m_CorruptionSpreadAcceleration					{ 0.01f};
+	int m_ResetEverySecond										{};
+
 	Buildings::BuildingTypes m_SelectedBuilding					{ Buildings::BuildingTypes::miner};
 	ConveyorBelt::Direction m_SelectedDirection					{ConveyorBelt::Direction::up};
 
@@ -94,14 +101,23 @@ private:
 																	{Buildings::spreader, 5, 5} };
 	GameEnds m_GameEndState											{ GameEnds::stillPlaying };
 
-	bool m_IsCurrentlyShowingAFactoryInterface					{ false };
-	Point2f m_FactoryWithInterfacePos							{ m_GridWidth, m_GridHeight };
+	bool m_IsCurrentlyShowingAFactoryInterface						{ false };
+	Point2f m_FactoryWithInterfacePos								{ m_GridWidth, m_GridHeight };
 
-	std::string m_TextPath{ "Roboto-Regular.ttf" };
-	const Texture* m_CompactNephirRecipeText = new Texture("CompactNephir { NephirOre, 5 } 0.5sec", m_TextPath, 20, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	int m_SlowerBeltUpdate											{};
+	const int m_BeltUpdateSpeed											{ 5 };
+
+
+	std::string m_TextPath											{ "Roboto-Regular.ttf" };
+	const Texture* m_CompactNephirRecipeText = new Texture("CompactNephir { NephirOre, 4 } 0.5sec", m_TextPath, 20, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
 	Transform m_CompactNephirRecipeTextTrans;
 	const Texture* m_AzulireRecipeText = new Texture("Azulire { AzulOre, 2 and NephirOre, 1} 0.5sec", m_TextPath, 20, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
 	Transform m_AzulireRecipeTextTrans;
 	const Texture* m_CompositeRecipeText = new Texture("Composite { CompactNephir, 1 and Azulire, 1} 2sec", m_TextPath, 20, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
 	Transform m_CompositeRecipeTextTrans;
+
+	const Texture* m_CompactNephirSelected = new Texture("CompactNephir", m_TextPath, 25, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_AzulireSelected = new Texture("Azulire", m_TextPath, 25, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+	const Texture* m_CompositeSelected = new Texture("Composite", m_TextPath, 25, Color4f{ 0.9f, 0.9f, 0.9f, 1.0f });
+
 };
